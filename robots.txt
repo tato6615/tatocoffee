@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 
-Sitemap: https://tatocoffee.pages.dev/sitemap.xml
+Sitemap: https://tatocoffeev1.pages.dev/sitemap.xml
