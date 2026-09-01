@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════
    TATO COFFEE — Cloudflare Pages Function
    วางไฟล์นี้ที่ /functions/_middleware.js ใน "โปรเจกต์ Pages เดียวกับ index.html"
-   (repo/โฟลเดอร์เดียวกับที่ deploy tatocoffee.pages.dev อยู่ตอนนี้)
+   (repo/โฟลเดอร์เดียวกับที่ deploy tatocoffeev1.pages.dev อยู่ตอนนี้)
 
    ต่างจากแผนเดิม (Worker Route ข้ามโดเมน) ตรงที่ไฟล์นี้รันอยู่ "ในโดเมนเดียวกับเว็บ" อยู่แล้ว
    (Cloudflare Pages Functions) เลยไม่ต้องผูก Worker Route ข้าม zone ที่เสี่ยงชนกับ Pages เดิม
