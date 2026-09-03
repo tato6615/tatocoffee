@@ -1313,16 +1313,24 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
   <nav>
     <div class="nav-category" data-group="overview">
-    <div class="nav-section" onclick="toggleNavSection(this)"><span class="nav-section-label"><span class="nav-drag-handle" onclick="event.stopPropagation()" title="ลากเพื่อจัดเรียงหมวดหมู่ใหม่">⠿</span><span>ภาพรวม</span></span><span class="nav-section-chevron">▾</span></div>
+    <div class="nav-section" onclick="toggleNavSection(this)"><span class="nav-section-label"><span class="nav-drag-handle" onclick="event.stopPropagation()" title="ลากเพื่อจัดเรียงหมวดหมู่ใหม่">⠿</span><span>🏠 ภาพรวม</span></span><span class="nav-section-chevron">▾</span></div>
     <div class="nav-group" data-group="overview">
       <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
         <span class="nav-icon">◈</span> Dashboard
       </div>
+    </div>
+    </div>
+
+    <!-- ═══ MODULE: งานขายวันนี้ — แยก DATA (สถานะ/เป้า ที่แค่ดู) ออกจาก ACTION (บันทึกยอดใหม่ ที่ต้องกรอก)
+         ตามหลัก "แยก DATA ออกจาก ACTION" แต่ยังจัดไว้กลุ่มเดียวกันเพราะผู้ใช้เปิดคู่กันแทบทุกวัน (ใช้บ่อยสุดรองจาก Dashboard) ═══ -->
+    <div class="nav-category" data-group="daily-sales">
+    <div class="nav-section" onclick="toggleNavSection(this)"><span class="nav-section-label"><span class="nav-drag-handle" onclick="event.stopPropagation()" title="ลากเพื่อจัดเรียงหมวดหมู่ใหม่">⠿</span><span>🎯 งานขายวันนี้</span></span><span class="nav-section-chevron">▾</span></div>
+    <div class="nav-group" data-group="daily-sales">
       <div class="nav-item" data-page="sales-target" onclick="showPage('sales-target')">
         <span class="nav-icon">🎯</span> เป้ายอดขาย
       </div>
       <div class="nav-item" data-page="sales-orders" onclick="showPage('sales-orders')">
-        <span class="nav-icon">📝</span> บันทึกยอดสั่งซื้อ
+        <span class="nav-icon">📝</span> + บันทึกยอดสั่งซื้อ
       </div>
     </div>
     </div>
