@@ -2149,7 +2149,20 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     <!-- ===== BULK OUTREACH ===== -->
     <div class="page" id="page-outreach">
       <div style="background:var(--gold-dim);border:1px solid rgba(196,154,58,0.3);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--gold2);margin-bottom:16px">
-        📣 ส่งข้อความ/LINE เป็นกลุ่มตาม Tier หรือจังหวัด พร้อมตั้งติดตามผลอัตโนมัติ และแบ่งร้านให้ทีมขายรับผิดชอบเป็นโซน
+        📣 เลือกร้านตาม Tier/จังหวัด ให้ AI ช่วยเขียนข้อความเฉพาะร้าน แล้วระบบจัดคิว sequence ติดตามผล 3 จังหวะให้อัตโนมัติ (วันที่ 0 / 3 / 7)
+        <br><span style="opacity:.85">⚠ หมายเหตุ: ระบบ "จัดคิว" และ "ร่างข้อความ" ให้อัตโนมัติ แต่การส่งจริงยังต้องกดปุ่มส่งต่อร้าน (อีเมล/โทร/Messenger) เพราะยังไม่ได้เชื่อมต่อ LINE Business API หรือ Email sending service ที่ส่งอัตโนมัติเต็มรูปแบบ</span>
+      </div>
+
+      <div class="card mb-16">
+        <div class="card-title">✦ AI เขียนข้อความเฉพาะร้าน (Batch) <span class="badge badge-gold" style="font-size:10px">Claude AI</span></div>
+        <div class="text-muted" style="font-size:12px;margin-bottom:12px">
+          แทนที่จะส่งข้อความเดียวกันทั้งหมด ให้ AI เขียนข้อความแยกทีละร้าน โดยอิงชื่อร้าน จังหวัด Tier และหมายเหตุที่มีอยู่ — ใช้กับร้านที่กรองไว้ในฟอร์มด้านล่างนี้ (ต้องตั้งค่า Anthropic API Key ที่ Settings ก่อน) ระบบเรียก AI ทีละร้านแบบต่อเนื่อง ยิ่งเลือกร้านเยอะยิ่งใช้เวลา/เครดิต API มากขึ้นตามจำนวนร้าน
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="ai-batch-offer-btn" onclick="generateBatchAIOffers()">✦ สร้างข้อความเฉพาะร้านด้วย AI ให้ร้านที่กรองไว้ (<span id="ai-batch-offer-count">0</span> ร้าน)</button>
+          <span id="ai-batch-offer-progress" style="font-size:12.5px;color:var(--text2)"></span>
+        </div>
+        <div id="ai-batch-offer-log" style="margin-top:10px;max-height:150px;overflow:auto;font-size:11.5px;color:var(--text3);display:none"></div>
       </div>
 
       <div class="card mb-16">
@@ -2171,6 +2184,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <option value="ติดต่อแล้ว">ติดต่อแล้ว</option>
               <option value="สนใจ">สนใจ</option>
               <option value="รอข้อมูลเพิ่ม">รอข้อมูลเพิ่ม</option>
+              <option value="ส่งตัวอย่างแล้ว">ส่งตัวอย่างแล้ว</option>
             </select>
           </div>
         </div>
@@ -2179,16 +2193,25 @@ textarea.form-input { resize: vertical; min-height: 80px; }
           <select class="form-input" id="outreach-province" multiple size="4" onchange="updateOutreachPreview()"></select>
         </div>
         <div class="form-group">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="outreach-only-contactable" onchange="updateOutreachPreview()"> เฉพาะร้านที่มีเบอร์โทรหรือ Facebook เท่านั้น</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="outreach-only-contactable" onchange="updateOutreachPreview()"> เฉพาะร้านที่มีเบอร์โทร, Facebook หรืออีเมลเท่านั้น</label>
         </div>
         <div class="form-group">
-          <label class="form-label">ข้อความ (ใช้ {{name}} แทนชื่อร้านได้)</label>
+          <label class="form-label">ข้อความ template สำรอง (ใช้ {{name}} แทนชื่อร้านได้ — จะถูกใช้เฉพาะร้านที่ AI ยังไม่ได้เขียนข้อความเฉพาะให้)</label>
           <textarea class="form-input" id="outreach-message" style="height:90px" placeholder="สวัสดีค่ะ {{name}} ทาง TATO Coffee Brand อยากส่งตัวอย่างเมล็ดกาแฟให้ลองชิมฟรีค่ะ สนใจแจ้งกลับได้เลยนะคะ 🙏">เพื่อทดลองใช้กาแฟคุณภาพจาก TATO Coffee Brand แจ้งชื่อร้านเพื่อรับตัวอย่างฟรีได้เลยค่ะ 🙏</textarea>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
-          <button class="btn btn-gold" onclick="sendBulkOutreach()">📣 ส่งข้อความกลุ่มตอนนี้</button>
-          <span style="font-size:12.5px;color:var(--text2)">จะส่งถึง <strong id="outreach-preview-count" style="color:var(--gold2)">0</strong> ร้าน · ระบบจะตั้งติดตามผลอัตโนมัติในอีก 7 วัน</span>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="outreach-use-ai-offer" checked> ใช้ข้อความเฉพาะร้านจาก AI (ถ้ามี) แทน template ด้านบน</label>
         </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="sendBulkOutreach()">📣 จัดคิวส่งข้อความกลุ่มตอนนี้</button>
+          <span style="font-size:12.5px;color:var(--text2)">จะจัดคิวให้ <strong id="outreach-preview-count" style="color:var(--gold2)">0</strong> ร้าน · ระบบจะตั้งติดตามผลรอบถัดไปอัตโนมัติในอีก 3 วัน</span>
+        </div>
+      </div>
+
+      <div class="card mb-16" id="outreach-send-results" style="display:none">
+        <div class="card-title">ส่งข้อความจริงตอนนี้ (กดต่อร้าน)</div>
+        <div class="text-muted" style="font-size:12px;margin-bottom:10px">ร้านด้านล่างนี้ถูกจัดคิวไว้แล้ว — กดปุ่มช่องทางที่มีของแต่ละร้านเพื่อส่งข้อความจริง (ระบบยังส่งอัตโนมัติแทนไม่ได้)</div>
+        <div id="outreach-send-results-list"></div>
       </div>
 
       <div class="card mb-16">
@@ -2989,7 +3012,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
         <div class="card">
           <div class="card-title">ข้อมูลระบบ</div>
-          <div class="text-muted mb-16">ข้อมูลทั้งหมดในแพลตฟอร์มนี้ถูกบันทึกไว้ในเบราว์เซอร์ของคุณ (localStorage) เพื่อให้ทดลองใช้งานได้จริงโดยไม่ต้องเชื่อมต่อเซิร์ฟเวอร์</div>
+          <div class="text-muted mb-16">ข้อมูลทั้งหมดในแพลตฟอร์มนี้ sync ขึ้นเซิร์ฟเวอร์กลาง (Cloudflare Worker) จริง ทุกเครื่อง/ทุกคนที่ login เห็นข้อมูลชุดเดียวกัน — เบราว์เซอร์เก็บ localStorage ไว้เป็นแค่ offline cache สำรอง เผื่อเน็ตหลุดหรือเซิร์ฟเวอร์ล่มชั่วคราวเท่านั้น ไม่ใช่แหล่งข้อมูลหลัก</div>
           <button class="btn btn-danger btn-sm" onclick="resetAllData()">รีเซ็ตข้อมูลทั้งหมดเป็นค่าเริ่มต้น</button>
         </div>
       </div>
@@ -3154,9 +3177,15 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         <input class="form-input" type="text" placeholder="0XX-XXX-XXXX" id="shop-phone">
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Facebook</label>
-      <input class="form-input" type="text" placeholder="facebook.com/..." id="shop-facebook">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Facebook</label>
+        <input class="form-input" type="text" placeholder="facebook.com/..." id="shop-facebook">
+      </div>
+      <div class="form-group">
+        <label class="form-label">อีเมล</label>
+        <input class="form-input" type="email" placeholder="shop@example.com" id="shop-email">
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -3166,6 +3195,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
           <option>ติดต่อแล้ว</option>
           <option>สนใจ</option>
           <option>รอข้อมูลเพิ่ม</option>
+          <option>ส่งตัวอย่างแล้ว</option>
           <option>ปิดดีล</option>
         </select>
       </div>
@@ -3400,6 +3430,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         <div>• เบอร์โทร → เบอร์โทร</div>
         <div>• Facebook → Facebook</div>
         <div>• Instagram → Instagram</div>
+        <div>• อีเมล → Email</div>
         <div>• Priority → Tier (🔥=High 🟡=Mid)</div>
         <div>• TATO Score → ใช้จัดเรียง</div>
       </div>
@@ -4257,7 +4288,7 @@ function resetAllData() {
 // ========= DASHBOARD =========
 function computeDashboardStats() {
   const shops = state.shops;
-  const counts = { 'ยังไม่ติดต่อ':0, 'ติดต่อแล้ว':0, 'สนใจ':0, 'รอข้อมูลเพิ่ม':0, 'ปิดดีล':0 };
+  const counts = { 'ยังไม่ติดต่อ':0, 'ติดต่อแล้ว':0, 'สนใจ':0, 'รอข้อมูลเพิ่ม':0, 'ส่งตัวอย่างแล้ว':0, 'ปิดดีล':0 };
   shops.forEach(s => { if (counts[s.status] !== undefined) counts[s.status]++; });
   const total = Math.max(state.shops.length, state.totalShopsEver || state.shops.length);
   const tierCounts = { High:0, Medium:0, Low:0 };
@@ -4301,6 +4332,7 @@ function renderDashboard() {
     { label:'ติดต่อแล้ว', status:'ติดต่อแล้ว', count: counts['ติดต่อแล้ว'], color:'var(--blue)', text:'#fff' },
     { label:'สนใจ', status:'สนใจ', count: counts['สนใจ'], color:'var(--amber)', text:'#fff' },
     { label:'รอข้อมูลเพิ่ม', status:'รอข้อมูลเพิ่ม', count: counts['รอข้อมูลเพิ่ม'], color:'var(--text3)', text:'#fff' },
+    { label:'ส่งตัวอย่างแล้ว', status:'ส่งตัวอย่างแล้ว', count: counts['ส่งตัวอย่างแล้ว'], color:'var(--blue2, #4a7fd6)', text:'#fff' },
     { label:'ปิดดีล ✓', status:'ปิดดีล', count: counts['ปิดดีล'], color:'var(--green)', text:'#fff' },
   ];
   const maxCount = Math.max(1, ...stages.map(s => s.count));
@@ -4994,6 +5026,7 @@ const statusBadge = {
   'ติดต่อแล้ว': '<span class="badge badge-blue">ติดต่อแล้ว</span>',
   'สนใจ': '<span class="badge badge-amber">สนใจ</span>',
   'รอข้อมูลเพิ่ม': '<span class="badge badge-gray">รอข้อมูล</span>',
+  'ส่งตัวอย่างแล้ว': '<span class="badge badge-gold">ส่งตัวอย่างแล้ว</span>',
   'ปิดดีล': '<span class="badge badge-green">ปิดดีล ✓</span>',
 };
 const tierBadge = {
@@ -5220,7 +5253,7 @@ function findShopForOrder(o) {
 function openAddShopModal() {
   document.getElementById('shop-modal-title').textContent = 'เพิ่มร้านกาแฟใหม่';
   document.getElementById('shop-edit-id').value = '';
-  ['shop-name','shop-district','shop-phone','shop-facebook','shop-notes'].forEach(id => document.getElementById(id).value = '');
+  ['shop-name','shop-district','shop-phone','shop-facebook','shop-email','shop-notes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('shop-province').value = '';
   document.getElementById('shop-status').value = 'ยังไม่ติดต่อ';
   document.getElementById('shop-tier').value = 'Low';
@@ -5237,6 +5270,7 @@ function openEditShopModal(id) {
   document.getElementById('shop-district').value = shop.district;
   document.getElementById('shop-phone').value = shop.phone;
   document.getElementById('shop-facebook').value = shop.facebook;
+  document.getElementById('shop-email').value = shop.email || '';
   document.getElementById('shop-status').value = shop.status;
   document.getElementById('shop-tier').value = shop.tier;
   document.getElementById('shop-notes').value = shop.notes || '';
@@ -5264,6 +5298,7 @@ function saveShop() {
     district: document.getElementById('shop-district').value.trim(),
     phone: document.getElementById('shop-phone').value.trim(),
     facebook: document.getElementById('shop-facebook').value.trim(),
+    email: document.getElementById('shop-email').value.trim(),
     status: document.getElementById('shop-status').value,
     tier: document.getElementById('shop-tier').value,
     notes: document.getElementById('shop-notes').value.trim(),
@@ -5317,7 +5352,9 @@ function openShopDetail(id) {
       <div><div class="form-label">เบอร์โทร</div><div>${shop.phone ? escapeHtml(shop.phone) : '<span style="color:var(--red)">ไม่มีเบอร์</span>'}</div></div>
     </div>
     ${shop.facebook ? `<div class="mb-16"><div class="form-label">Facebook</div><div>${escapeHtml(shop.facebook)}</div></div>` : ''}
+    ${shop.email ? `<div class="mb-16"><div class="form-label">อีเมล</div><div>${escapeHtml(shop.email)}</div></div>` : ''}
     ${shop.notes ? `<div class="mb-16"><div class="form-label">หมายเหตุก่อนหน้า</div><div style="color:var(--text2);font-size:13px">${escapeHtml(shop.notes)}</div></div>` : ''}
+    ${shop.aiOffer ? `<div class="mb-16"><div class="form-label">ข้อความเฉพาะร้านจาก AI ล่าสุด</div><div style="color:var(--text2);font-size:13px;background:var(--gold-dim);border-radius:8px;padding:8px 10px">${escapeHtml(shop.aiOffer)}</div></div>` : ''}
   `;
   document.getElementById('contact-log').value = '';
   openModal('modal-shop-detail');
@@ -5353,6 +5390,18 @@ function populateProvinceMultiSelect(id) {
   sel.innerHTML = provinces.map(p => `<option value="${escapeHtml(p)}" ${current.includes(p)?'selected':''}>${escapeHtml(p)}</option>`).join('');
 }
 
+/* ── Outreach Sequence (ทำจริงเป็นหลายจังหวะ แทนการตั้งเตือนครั้งเดียว 7 วัน) ──
+   step 0 = ข้อความแรกที่ส่งตอนกด "ส่งข้อความกลุ่ม"
+   step 1..n = ข้อความติดตามผลตามจังหวะวันที่กำหนด — ระบบจัดคิว "ครบกำหนด" ให้อัตโนมัติ
+   ⚠ หมายเหตุ: ระบบนี้ "จัดคิว" ให้ว่าใครถึงคิวส่งข้อความไหนแล้ว แต่ "การส่งจริง" ยังต้องกดส่งเอง
+   ต่อร้าน (ผ่านปุ่ม เปิดอีเมล / โทร / เปิด Facebook ด้านล่าง) เพราะยังไม่ได้เชื่อมต่อ LINE Business API
+   หรือ Email sending service ใดๆ — การเชื่อมต่อส่งอัตโนมัติเต็มรูปแบบต้องใช้บัญชี/เครดิตของผู้ให้บริการเอง */
+const OUTREACH_SEQUENCE_STEPS = [
+  { day: 0, label: 'ข้อความแรก' },
+  { day: 3, label: 'ติดตามครั้งที่ 1' },
+  { day: 7, label: 'ติดตามครั้งที่ 2 (ปิดท้าย)' },
+];
+
 function getOutreachCandidates() {
   const tiers = [...document.querySelectorAll('.outreach-tier:checked')].map(el => el.value);
   const provSel = document.getElementById('outreach-province');
@@ -5363,7 +5412,7 @@ function getOutreachCandidates() {
     (tiers.length === 0 || tiers.includes(s.tier)) &&
     (provinces.length === 0 || provinces.includes(s.province)) &&
     (!statusFilter || s.status === statusFilter) &&
-    (!onlyContactable || s.phone || s.facebook)
+    (!onlyContactable || s.phone || s.facebook || s.email)
   );
 }
 
@@ -5371,6 +5420,100 @@ function updateOutreachPreview() {
   const list = getOutreachCandidates();
   const el = document.getElementById('outreach-preview-count');
   if (el) el.textContent = list.length.toLocaleString();
+  const aiCountEl = document.getElementById('ai-batch-offer-count');
+  if (aiCountEl) aiCountEl.textContent = list.length.toLocaleString();
+}
+
+/* ── AI Batch Offer Generator ──
+   เรียก Claude API ทีละร้าน (sequential) ให้กับร้านทั้งหมดที่ผ่าน filter ของฟอร์ม Bulk Outreach
+   เก็บผลลัพธ์ไว้ที่ shop.aiOffer เพื่อให้ sendBulkOutreach() หยิบไปใช้แทน template เดียวกันทั้งหมด
+   หมายเหตุ: รันจากฝั่ง browser ตรงๆ ไปที่ api.anthropic.com ด้วย key ที่ตั้งไว้ใน Settings —
+   ถ้าเลือกร้านจำนวนมาก (หลักร้อย/พัน) จะใช้เวลานานและใช้ credit ตามจำนวนร้านจริง ควรกรองให้แคบก่อน */
+function generateBatchAIOffers() {
+  const key = getClaudeKey();
+  if (!key) { toast('ยังไม่ได้ตั้งค่า Anthropic API Key — ไปที่ Settings ก่อน', 'error'); return; }
+  const list = getOutreachCandidates();
+  if (!list.length) { toast('ไม่พบร้านที่ตรงเงื่อนไข', 'error'); return; }
+  if (list.length > 30) {
+    confirmAction('สร้างข้อความจำนวนมาก', `กำลังจะสร้างข้อความเฉพาะร้านให้ ${list.length.toLocaleString()} ร้าน ซึ่งจะเรียก AI ${list.length.toLocaleString()} ครั้งและใช้เวลา/เครดิตตามจำนวนนี้ — แนะนำให้กรอง Tier/จังหวัด/สถานะให้แคบลงก่อน ต้องการดำเนินการต่อหรือไม่?`, () => runBatchAIOffers(list));
+    return;
+  }
+  runBatchAIOffers(list);
+}
+async function runBatchAIOffers(list) {
+  const btn = document.getElementById('ai-batch-offer-btn');
+  const progressEl = document.getElementById('ai-batch-offer-progress');
+  const logEl = document.getElementById('ai-batch-offer-log');
+  btn.disabled = true;
+  logEl.style.display = 'block';
+  logEl.innerHTML = '';
+  let done = 0, failed = 0;
+  for (const s of list) {
+    progressEl.textContent = `กำลังสร้าง ${done + failed + 1}/${list.length} — ${s.name}`;
+    const system = `คุณคือ Sales copywriter ของ TATO Coffee Brand (ขายกาแฟ Private Label ให้ร้านกาแฟ) เขียนข้อความทักทาย+ชวนลองตัวอย่างฟรี ความยาว 3-5 บรรทัด ภาษาไทย เป็นกันเอง ไม่ pushy ไม่ใช้ HTML/Markdown ตอบเป็นข้อความล้วนพร้อมส่งจริงเท่านั้น ห้ามมีคำอธิบายอื่นนอกจากตัวข้อความ`;
+    const user = `ร้าน: ${s.name}\nจังหวัด: ${s.province || '-'}\nTier ความน่าสนใจ: ${s.tier || '-'}\nหมายเหตุที่มีอยู่: ${s.notes || '-'}\n\nเขียนข้อความชวนร้านนี้ลองตัวอย่างกาแฟฟรีจาก TATO Coffee Brand โดยอ้างอิงบริบทร้าน/จังหวัดถ้าเป็นไปได้`;
+    try {
+      const result = await callClaudeAPI(system, user);
+      s.aiOffer = result.replace(/<[^>]*>/g, '').trim();
+      done++;
+      logEl.insertAdjacentHTML('beforeend', `<div>✓ ${escapeHtml(s.name)}</div>`);
+    } catch (e) {
+      failed++;
+      logEl.insertAdjacentHTML('beforeend', `<div style="color:var(--red)">✗ ${escapeHtml(s.name)} — ${escapeHtml(e.message)}</div>`);
+    }
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  progressEl.textContent = '';
+  btn.disabled = false;
+  saveState();
+  toast(`สร้างข้อความเฉพาะร้านสำเร็จ ${done} ร้าน${failed ? `, ล้มเหลว ${failed} ร้าน` : ''}`, failed ? 'error' : 'success');
+  logActivity(`AI สร้างข้อความเฉพาะร้าน (batch) ให้ ${done} ร้าน${failed ? ` (ล้มเหลว ${failed})` : ''}`, 'var(--gold)');
+}
+
+/* ── ตัวช่วยสร้างปุ่ม "ส่งจริง" ต่อร้าน — เพราะระบบยังไม่ได้เชื่อมต่อ LINE/Email sending API
+   จึงต้องให้ผู้ใช้กดส่งเองต่อช่องทางที่ร้านนั้นมีข้อมูลอยู่ ── */
+function getFacebookMessengerLink(fb) {
+  if (!fb) return null;
+  let handle = String(fb).trim()
+    .replace(/^https?:\/\//i, '').replace(/^www\./i, '')
+    .replace(/^(m\.)?facebook\.com\//i, '').replace(/^fb\.com\//i, '')
+    .split('?')[0].split('/')[0];
+  if (!handle) return null;
+  return `https://m.me/${handle}`;
+}
+function buildOutreachActionButtons(shop) {
+  const btns = [];
+  const msg = shop.lastSentMessage || shop.aiOffer || '';
+  if (shop.email) {
+    const subject = encodeURIComponent(`TATO Coffee Brand — ตัวอย่างกาแฟฟรีสำหรับ ${shop.name}`);
+    const body = encodeURIComponent(msg);
+    btns.push(`<a class="btn btn-ghost btn-sm" href="mailto:${escapeHtml(shop.email)}?subject=${subject}&body=${body}" target="_blank">✉ อีเมล</a>`);
+  }
+  if (shop.phone) {
+    btns.push(`<a class="btn btn-ghost btn-sm" href="tel:${escapeHtml(String(shop.phone).replace(/[^0-9+]/g,''))}">📞 โทร</a>`);
+  }
+  const mLink = getFacebookMessengerLink(shop.facebook);
+  if (mLink) {
+    btns.push(`<a class="btn btn-ghost btn-sm" href="${escapeHtml(mLink)}" target="_blank" rel="noopener">💬 Messenger</a>`);
+  }
+  if (msg) {
+    btns.push(`<button class="btn btn-ghost btn-sm" onclick="copyOutreachMessage(${shop.id})">📋 คัดลอกข้อความ</button>`);
+  }
+  if (!btns.length) {
+    btns.push(`<span style="font-size:11px;color:var(--text3)">ไม่มีช่องทางติดต่อในระบบ (โทร/FB/อีเมล)</span>`);
+  }
+  return btns.join(' ');
+}
+async function copyOutreachMessage(shopId) {
+  const s = state.shops.find(x => x.id === shopId);
+  const msg = s && (s.lastSentMessage || s.aiOffer);
+  if (!msg) { toast('ไม่พบข้อความสำหรับร้านนี้', 'error'); return; }
+  try {
+    await navigator.clipboard.writeText(msg);
+    toast('คัดลอกข้อความแล้ว — วางในแชท/แอปที่ต้องการส่งได้เลย', 'success');
+  } catch (e) {
+    toast('คัดลอกไม่สำเร็จ: ' + e.message, 'error');
+  }
 }
 
 function sendBulkOutreach() {
@@ -5378,20 +5521,45 @@ function sendBulkOutreach() {
   if (!list.length) { toast('ไม่พบร้านที่ตรงเงื่อนไข', 'error'); return; }
   const msg = document.getElementById('outreach-message').value.trim();
   if (!msg) { toast('กรุณากรอกข้อความ', 'error'); return; }
+  const useAiOffer = document.getElementById('outreach-use-ai-offer')?.checked;
   const now = new Date();
-  const followUpIso = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  let contacted = 0;
+  const step1Gap = OUTREACH_SEQUENCE_STEPS[1].day * 24 * 60 * 60 * 1000;
+  const followUpIso = new Date(now.getTime() + step1Gap).toISOString();
+  let contacted = 0, aiUsed = 0;
   list.forEach(s => {
+    const personalized = useAiOffer && s.aiOffer ? s.aiOffer : msg.replace(/\{\{name\}\}/g, s.name);
+    if (useAiOffer && s.aiOffer) aiUsed++;
     s.lastOutreachAt = now.toISOString();
+    s.lastSentMessage = personalized;
+    s.sequenceStep = 1; // ส่งข้อความแรกแล้ว (step 0) รอครบกำหนด step 1
     s.nextFollowUpAt = followUpIso;
     if (s.status === 'ยังไม่ติดต่อ') { s.status = 'ติดต่อแล้ว'; contacted++; }
   });
-  logActivity(`ส่งข้อความกลุ่มถึง <strong>${list.length}</strong> ร้าน (${contacted} ร้านเปลี่ยนสถานะเป็น "ติดต่อแล้ว") — ตั้งติดตามผลอัตโนมัติในอีก 7 วัน`, 'var(--gold)');
+  logActivity(`เตรียมข้อความถึง <strong>${list.length}</strong> ร้าน (${aiUsed} ร้านใช้ข้อความเฉพาะร้านจาก AI, ${contacted} ร้านเปลี่ยนสถานะเป็น "ติดต่อแล้ว") — เข้าคิว sequence รอบถัดไป (${OUTREACH_SEQUENCE_STEPS[1].label}) ในอีก ${OUTREACH_SEQUENCE_STEPS[1].day} วัน`, 'var(--gold)');
   saveState();
-  toast(`ส่งข้อความกลุ่มสำเร็จ ${list.length} ร้าน`, 'success');
+  toast(`จัดคิวข้อความให้ ${list.length} ร้านแล้ว — กดส่งจริงต่อร้านได้ในกล่อง "ส่งข้อความจริงตอนนี้" ด้านล่าง`, 'success');
   renderCRM();
   renderFollowUps();
   updateOutreachNavBadge();
+
+  // แสดงปุ่ม "ส่งจริง" ต่อร้าน (จำกัด 50 แถวแรกต่อรอบ กันหน้าอืดถ้าเลือกไว้หลักพันร้าน)
+  const resultsCard = document.getElementById('outreach-send-results');
+  const resultsList = document.getElementById('outreach-send-results-list');
+  if (resultsCard && resultsList) {
+    const shown = list.slice(0, 50);
+    resultsList.innerHTML = shown.map(s => `
+      <div class="card mb-8" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;flex-wrap:wrap;gap:8px">
+        <div style="min-width:160px">
+          <div style="font-weight:600">${escapeHtml(s.name)} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${escapeHtml(s.province || '')}</span></div>
+          <div style="font-size:11px;color:var(--text3);max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(s.lastSentMessage || '')}">${escapeHtml(s.lastSentMessage || '')}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${buildOutreachActionButtons(s)}</div>
+      </div>`).join('');
+    if (list.length > 50) {
+      resultsList.insertAdjacentHTML('beforeend', `<div class="text-muted" style="font-size:11.5px;padding:6px 4px">แสดง 50 ร้านแรกจากทั้งหมด ${list.length.toLocaleString()} ร้าน — ที่เหลือจะปรากฏใน "ครบกำหนดติดตามผล" ตามคิวของแต่ละร้าน</div>`);
+    }
+    resultsCard.style.display = 'block';
+  }
 }
 
 function getFollowUpsDue() {
@@ -5410,15 +5578,22 @@ function renderFollowUps() {
   } else {
     el.innerHTML = list.map(s => {
       const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(s.nextFollowUpAt).getTime()) / 86400000));
-      return `<div class="card mb-8" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-weight:600">${escapeHtml(s.name)} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${escapeHtml(s.province)}</span></div>
-          <div style="font-size:11px;color:var(--red)">เกินกำหนดติดตาม ${daysOverdue} วัน${s.assignedRep ? ' · ผู้รับผิดชอบ: ' + escapeHtml(s.assignedRep) : ''}</div>
+      const stepIdx = Math.min(s.sequenceStep || 1, OUTREACH_SEQUENCE_STEPS.length - 1);
+      const stepInfo = OUTREACH_SEQUENCE_STEPS[stepIdx];
+      return `<div class="card mb-8" style="padding:10px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:600">${escapeHtml(s.name)} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${escapeHtml(s.province)}</span> <span class="badge badge-gold" style="font-size:10px">${escapeHtml(stepInfo.label)}</span></div>
+            <div style="font-size:11px;color:var(--red)">เกินกำหนดติดตาม ${daysOverdue} วัน${s.assignedRep ? ' · ผู้รับผิดชอบ: ' + escapeHtml(s.assignedRep) : ''}</div>
+            ${s.lastSentMessage ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;max-width:420px">ข้อความล่าสุด: "${escapeHtml(s.lastSentMessage)}"</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="snoozeFollowUp(${s.id})">เลื่อน 3 วัน</button>
+            <button class="btn btn-ghost btn-sm" onclick="markShopSampleSent(${s.id})" title="เปลี่ยนสถานะเป็น ส่งตัวอย่างแล้ว">📦 ส่งตัวอย่างแล้ว</button>
+            <button class="btn btn-gold btn-sm" onclick="markFollowUpDone(${s.id})">✓ ติดตามรอบนี้แล้ว</button>
+          </div>
         </div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="snoozeFollowUp(${s.id})">เลื่อน 3 วัน</button>
-          <button class="btn btn-gold btn-sm" onclick="markFollowUpDone(${s.id})">บันทึกติดตามแล้ว</button>
-        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${buildOutreachActionButtons(s)}</div>
       </div>`;
     }).join('');
   }
@@ -5437,11 +5612,33 @@ function markFollowUpDone(id) {
   const s = state.shops.find(x => x.id === id);
   if (!s) return;
   s.lastOutreachAt = new Date().toISOString();
-  s.nextFollowUpAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  logActivity(`บันทึกการติดตามผล <strong>${escapeHtml(s.name)}</strong> — นัดรอบถัดไปในอีก 7 วัน`, 'var(--blue)');
+  const curStep = s.sequenceStep || 1;
+  const nextStep = curStep + 1;
+  if (nextStep < OUTREACH_SEQUENCE_STEPS.length) {
+    const gapDays = OUTREACH_SEQUENCE_STEPS[nextStep].day - OUTREACH_SEQUENCE_STEPS[curStep].day;
+    s.sequenceStep = nextStep;
+    s.nextFollowUpAt = new Date(Date.now() + gapDays * 24 * 60 * 60 * 1000).toISOString();
+    logActivity(`บันทึกการติดตามผล <strong>${escapeHtml(s.name)}</strong> — เข้าคิวรอบถัดไป "${OUTREACH_SEQUENCE_STEPS[nextStep].label}" ในอีก ${gapDays} วัน`, 'var(--blue)');
+    toast(`บันทึกแล้ว — นัดรอบถัดไป "${OUTREACH_SEQUENCE_STEPS[nextStep].label}" ใน ${gapDays} วัน`, 'success');
+  } else {
+    s.nextFollowUpAt = null;
+    logActivity(`<strong>${escapeHtml(s.name)}</strong> — จบทุกรอบใน sequence แล้วโดยยังไม่ได้รับการตอบกลับ พิจารณาปรับสถานะหรือหยุดติดตาม`, 'var(--text3)');
+    toast('จบทุกรอบของ sequence แล้ว — ร้านนี้จะไม่ขึ้นแจ้งเตือนอีกจนกว่าจะส่งข้อความกลุ่มรอบใหม่', 'success');
+  }
   saveState();
-  toast('บันทึกการติดตามแล้ว — นัดรอบถัดไปใน 7 วัน', 'success');
   renderFollowUps();
+}
+function markShopSampleSent(id) {
+  const s = state.shops.find(x => x.id === id);
+  if (!s) return;
+  s.status = 'ส่งตัวอย่างแล้ว';
+  s.nextFollowUpAt = null;
+  logActivity(`<strong>${escapeHtml(s.name)}</strong> — เปลี่ยนสถานะเป็น "ส่งตัวอย่างแล้ว"`, 'var(--gold)');
+  saveState();
+  toast(`บันทึก "${s.name}" เป็นส่งตัวอย่างแล้ว`, 'success');
+  renderFollowUps();
+  renderCRM();
+  renderDashboard();
 }
 
 function snoozeFollowUp(id) {
@@ -7239,6 +7436,7 @@ function parseExcelFile(file) {
         phone:    mapField(row, 'เบอร์โทร', 'phone', 'Phone'),
         facebook: mapField(row, 'Facebook', 'facebook', 'Facebook Page'),
         instagram:mapField(row, 'Instagram', 'instagram'),
+        email:    mapField(row, 'อีเมล', 'Email', 'email', 'E-mail'),
         status:   'ยังไม่ติดต่อ',
         // 'ระดับความน่าเชื่อถือ' คือคอลัมน์ High/Medium/Low จริงในฐานข้อมูลร้านกาแฟ (coffee_shop_database.xlsx)
         tier:     priorityMap(mapField(row, 'Priority', 'priority', 'Tier', 'tier', 'ระดับความน่าเชื่อถือ')) || 'Low',
